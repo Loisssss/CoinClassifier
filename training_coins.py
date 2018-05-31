@@ -5,11 +5,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
 import time
+from tensorflow.python.framework import graph_util
+
 
 #path of dataset
-path='D:/Download/CoinsDatasets/coins_photo/'
+# path='D:/Download/CoinsDatasets/coins_photo/'
+path = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/CoinPhotos'
 #path to store model
-model_path='D:/Download/CoinsDatasets/model/coins/model.ckpt'
+# model_path='D:/Download/CoinsDatasets/model/coins/model.ckpt'
+model_path = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.ckpt'
 
 #resize all photos into 100*100 and rgb
 w=100
@@ -19,6 +23,8 @@ c=3
 #read photos
 def read_img(path):
     cate = [path + '/' + x for x in os.listdir(path) if os.path.isdir(path + '/' + x)]
+    print(cate)
+
     imgs=[]
     labels=[]
     for idx,folder in enumerate(cate):
@@ -151,7 +157,7 @@ def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
 #训练和测试数据，可将n_epoch设置更大一些
 
 n_epoch=10
-batch_size=20
+batch_size=5
 saver=tf.train.Saver()
 sess=tf.Session()
 sess.run(tf.global_variables_initializer())
@@ -177,5 +183,9 @@ for epoch in range(n_epoch):
         n_batch += 1
     print("   validation loss: %f" % (np.sum(val_loss) / n_batch))
     print("   validation acc: %f" % (np.sum(val_acc) / n_batch))
+
+constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ["logits_eval"])
+with tf.gfile.FastGFile('/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.pb', mode='wb') as f:
+    f.write(constant_graph.SerializeToString())
 saver.save(sess, model_path)
 sess.close()
