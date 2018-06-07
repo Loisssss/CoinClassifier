@@ -2,16 +2,15 @@ from skimage import io,transform
 import tensorflow as tf
 import numpy as np
 
-path1 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/1euro.jpg"
-path2 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2cent.jpg"
-path3 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2euro.jpg"
-path4 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/10cent.jpg"
-path5 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/50cent.jpg"
-MODELPATH = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.pb'
+path1 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/1euro3.jpg"
+path2 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2cent2.jpg"
+path3 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2euro3.jpg"
+path4 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/10cent2.jpg"
+path5 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/50cent3.jpg"
 flower_dict = {0:'1 euro',1:'2 euro',2:'10 cent',3:'50 cent',4:'2 cent'}
 
-w=100
-h=100
+w=224
+h=224
 c=3
 
 def read_one_image(path):
@@ -61,5 +60,6 @@ with tf.Graph().as_default():
         output = []
         output = tf.argmax(classification_result, 1).eval()
         for i in range(len(output)):
-            print("第", i + 1, "个硬币预测:" + flower_dict[output[i]])
+            print("The", i + 1, "coin prediction"
+                                ":" + flower_dict[output[i]])
 

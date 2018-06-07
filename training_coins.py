@@ -16,15 +16,13 @@ path = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/CoinPhot
 model_path = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.ckpt'
 
 #resize all photos into 100*100 and rgb
-w=100
-h=100
+w=224
+h=224
 c=3
 
 #read photos
 def read_img(path):
     cate = [path + '/' + x for x in os.listdir(path) if os.path.isdir(path + '/' + x)]
-    print(cate)
-
     imgs=[]
     labels=[]
     for idx,folder in enumerate(cate):
@@ -90,40 +88,66 @@ def inference(input_tensor, train, regularizer):
         pool3 = tf.nn.max_pool(relu3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     with tf.variable_scope("layer7-conv4"):
-        conv4_weights = tf.get_variable("weight",[3,3,128,128],initializer=tf.truncated_normal_initializer(stddev=0.1))
-        conv4_biases = tf.get_variable("bias", [128], initializer=tf.constant_initializer(0.0))
+        conv4_weights = tf.get_variable("weight",[3,3,128,256],initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv4_biases = tf.get_variable("bias", [256], initializer=tf.constant_initializer(0.0))
         conv4 = tf.nn.conv2d(pool3, conv4_weights, strides=[1, 1, 1, 1], padding='SAME')
         relu4 = tf.nn.relu(tf.nn.bias_add(conv4, conv4_biases))
 
     with tf.name_scope("layer8-pool4"):
         pool4 = tf.nn.max_pool(relu4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-        nodes = 6*6*128
-        reshaped = tf.reshape(pool4,[-1,nodes])
+        # nodes = 6*6*128
+        # reshaped = tf.reshape(pool4,[-1,nodes])
+
+
+    # ///////////////////////
+    with tf.variable_scope("layer9-conv5"):
+        conv5_weights = tf.get_variable("weight", [2,2,256,256], initializer = tf.truncated_normal_initializer(stddev = 0.1))
+        conv5_biases = tf.get_variable("bias", [256], initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv5 = tf.nn.conv2d(pool4, conv5_weights, strides=[1,1,1,1], padding='SAME')
+        relu5 = tf.nn.relu(tf.nn.bias_add(conv5, conv5_biases))
+    with tf.name_scope("layer10-pool5"):
+        pool5 = tf.nn.max_pool(relu5, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+        nodes = 7*7*256
+        reshaped = tf.reshape(pool5,[-1, nodes])
+    # //////////////////////////
+
 
     with tf.variable_scope('layer9-fc1'):
-        fc1_weights = tf.get_variable("weight", [nodes, 1024],
+        fc1_weights = tf.get_variable("weight", [nodes, 2048],
                                       initializer=tf.truncated_normal_initializer(stddev=0.1))
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc1_weights))
-        fc1_biases = tf.get_variable("bias", [1024], initializer=tf.constant_initializer(0.1))
+        fc1_biases = tf.get_variable("bias", [2048], initializer=tf.constant_initializer(0.1))
 
         fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weights) + fc1_biases)
         if train: fc1 = tf.nn.dropout(fc1, 0.5)
 
     with tf.variable_scope('layer10-fc2'):
-        fc2_weights = tf.get_variable("weight", [1024, 512],
+        fc2_weights = tf.get_variable("weight", [2048, 1024],
                                       initializer=tf.truncated_normal_initializer(stddev=0.1))
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc2_weights))
-        fc2_biases = tf.get_variable("bias", [512], initializer=tf.constant_initializer(0.1))
+        fc2_biases = tf.get_variable("bias", [1024], initializer=tf.constant_initializer(0.1))
 
         fc2 = tf.nn.relu(tf.matmul(fc1, fc2_weights) + fc2_biases)
         if train: fc2 = tf.nn.dropout(fc2, 0.5)
 
     with tf.variable_scope('layer11-fc3'):
-        fc3_weights = tf.get_variable("weight", [512, 5],
+        fc3_weights = tf.get_variable("weight", [1024, 512],
                                       initializer=tf.truncated_normal_initializer(stddev=0.1))
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc3_weights))
-        fc3_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
-        logit = tf.matmul(fc2, fc3_weights) + fc3_biases
+
+        # fc3_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
+        # logit = tf.matmul(fc2, fc3_weights) + fc3_biases
+        fc3_biases = tf.get_variable("bias", [512], initializer=tf.constant_initializer(0.1))
+        fc3 = tf.nn.relu(tf.matmul(fc2, fc3_weights) + fc3_biases)
+        if train: fc3 = tf.nn.dropout(fc3, 0.5)
+
+    with tf.variable_scope('layer12-fc4'):
+        fc4_weights = tf.get_variable("weight", [512, 5],
+                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+        if regularizer != None: tf.add_to_collection('losses', regularizer(fc4_weights))
+        fc4_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
+        logit = tf.matmul(fc3, fc4_weights) + fc4_biases
+
 
     return logit
 
@@ -142,6 +166,7 @@ correct_prediction = tf.equal(tf.cast(tf.argmax(logits,1),tf.int32), y_)
 acc= tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 #定义一个函数，按批次取数据
+#mini batch：每次随机选择batch_size 个样本，损失函数定义在batch_size 个样本上。每次都是在batch_size个样本上作梯度下降。
 def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
     assert len(inputs) == len(targets)
     if shuffle:
@@ -155,9 +180,8 @@ def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
         yield inputs[excerpt], targets[excerpt]
 
 #训练和测试数据，可将n_epoch设置更大一些
-
 n_epoch=10
-batch_size=5
+batch_size=64
 saver=tf.train.Saver()
 sess=tf.Session()
 sess.run(tf.global_variables_initializer())
@@ -183,6 +207,7 @@ for epoch in range(n_epoch):
         n_batch += 1
     print("   validation loss: %f" % (np.sum(val_loss) / n_batch))
     print("   validation acc: %f" % (np.sum(val_acc) / n_batch))
+    print("   -----------------------------")
 
 constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ["logits_eval"])
 with tf.gfile.FastGFile('/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.pb', mode='wb') as f:
