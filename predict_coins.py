@@ -2,11 +2,11 @@ from skimage import io,transform
 import tensorflow as tf
 import numpy as np
 
-path1 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/1euro3.jpg"
-path2 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2cent2.jpg"
-path3 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2euro3.jpg"
-path4 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/10cent2.jpg"
-path5 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/50cent3.jpg"
+path1 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/1euro.jpg"
+path2 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2cent.jpg"
+path3 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2euro.jpg"
+path4 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/10cent.jpg"
+path5 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/50cent.jpg"
 flower_dict = {0:'1 euro',1:'2 euro',2:'10 cent',3:'50 cent',4:'2 cent'}
 
 w=224
