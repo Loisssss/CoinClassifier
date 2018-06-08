@@ -60,7 +60,7 @@ def inference(input_tensor, train, regularizer):
     with tf.variable_scope('layer1-conv1'):
         # 5 is input width, 5 is input height
         # 3 is input size and 32 is output size
-        conv1_weights = tf.get_variable("weight",[5,5,3,32],initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv1_weights = tf.get_variable("weight",[5,5,3,32],initializer=tf.contrib.layers.xavier_initializer())
         conv1_biases = tf.get_variable("bias", [32], initializer=tf.constant_initializer(0.0))
         # strides means skip, 1 is not skip any sample
         conv1 = tf.nn.conv2d(input_tensor, conv1_weights, strides=[1, 1, 1, 1], padding='SAME')
@@ -70,7 +70,7 @@ def inference(input_tensor, train, regularizer):
         pool1 = tf.nn.max_pool(relu1, ksize = [1,2,2,1],strides=[1,2,2,1],padding="VALID")
 
     with tf.variable_scope("layer3-conv2"):
-        conv2_weights = tf.get_variable("weight",[5,5,32,64],initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv2_weights = tf.get_variable("weight",[5,5,32,64],initializer=tf.contrib.layers.xavier_initializer())
         conv2_biases = tf.get_variable("bias", [64], initializer=tf.constant_initializer(0.0))
         conv2 = tf.nn.conv2d(pool1, conv2_weights, strides=[1, 1, 1, 1], padding='SAME')
         relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_biases))
@@ -79,7 +79,7 @@ def inference(input_tensor, train, regularizer):
         pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     with tf.variable_scope("layer5-conv3"):
-        conv3_weights = tf.get_variable("weight",[3,3,64,128],initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv3_weights = tf.get_variable("weight",[3,3,64,128],initializer=tf.contrib.layers.xavier_initializer())
         conv3_biases = tf.get_variable("bias", [128], initializer=tf.constant_initializer(0.0))
         conv3 = tf.nn.conv2d(pool2, conv3_weights, strides=[1, 1, 1, 1], padding='SAME')
         relu3 = tf.nn.relu(tf.nn.bias_add(conv3, conv3_biases))
@@ -88,7 +88,7 @@ def inference(input_tensor, train, regularizer):
         pool3 = tf.nn.max_pool(relu3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     with tf.variable_scope("layer7-conv4"):
-        conv4_weights = tf.get_variable("weight",[3,3,128,256],initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv4_weights = tf.get_variable("weight",[3,3,128,256],initializer=tf.contrib.layers.xavier_initializer())
         conv4_biases = tf.get_variable("bias", [256], initializer=tf.constant_initializer(0.0))
         conv4 = tf.nn.conv2d(pool3, conv4_weights, strides=[1, 1, 1, 1], padding='SAME')
         relu4 = tf.nn.relu(tf.nn.bias_add(conv4, conv4_biases))
@@ -101,8 +101,8 @@ def inference(input_tensor, train, regularizer):
 
     # ///////////////////////
     with tf.variable_scope("layer9-conv5"):
-        conv5_weights = tf.get_variable("weight", [2,2,256,256], initializer = tf.truncated_normal_initializer(stddev = 0.1))
-        conv5_biases = tf.get_variable("bias", [256], initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv5_weights = tf.get_variable("weight", [2,2,256,256], initializer=tf.contrib.layers.xavier_initializer())
+        conv5_biases = tf.get_variable("bias", [256], initializer=tf.constant_initializer(0.0))
         conv5 = tf.nn.conv2d(pool4, conv5_weights, strides=[1,1,1,1], padding='SAME')
         relu5 = tf.nn.relu(tf.nn.bias_add(conv5, conv5_biases))
     with tf.name_scope("layer10-pool5"):
@@ -114,7 +114,7 @@ def inference(input_tensor, train, regularizer):
 
     with tf.variable_scope('layer9-fc1'):
         fc1_weights = tf.get_variable("weight", [nodes, 2048],
-                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+                                      initializer=tf.contrib.layers.xavier_initializer())
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc1_weights))
         fc1_biases = tf.get_variable("bias", [2048], initializer=tf.constant_initializer(0.1))
 
@@ -123,7 +123,7 @@ def inference(input_tensor, train, regularizer):
 
     with tf.variable_scope('layer10-fc2'):
         fc2_weights = tf.get_variable("weight", [2048, 1024],
-                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+                                      initializer=tf.contrib.layers.xavier_initializer())
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc2_weights))
         fc2_biases = tf.get_variable("bias", [1024], initializer=tf.constant_initializer(0.1))
 
@@ -132,7 +132,7 @@ def inference(input_tensor, train, regularizer):
 
     with tf.variable_scope('layer11-fc3'):
         fc3_weights = tf.get_variable("weight", [1024, 512],
-                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+                                      initializer=tf.contrib.layers.xavier_initializer())
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc3_weights))
 
         # fc3_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
@@ -143,7 +143,7 @@ def inference(input_tensor, train, regularizer):
 
     with tf.variable_scope('layer12-fc4'):
         fc4_weights = tf.get_variable("weight", [512, 5],
-                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+                                      initializer=tf.contrib.layers.xavier_initializer())
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc4_weights))
         fc4_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
         logit = tf.matmul(fc3, fc4_weights) + fc4_biases
@@ -192,8 +192,8 @@ for epoch in range(n_epoch):
     train_loss, train_acc, n_batch = 0, 0, 0
     for x_train_a, y_train_a in minibatches(x_train, y_train, batch_size, shuffle=True):
         _, err, ac = sess.run([train_op, loss, acc], feed_dict={x: x_train_a, y_: y_train_a})
-        train_loss += err;
-        train_acc += ac;
+        train_loss += err
+        train_acc += ac
         n_batch += 1
     print("   train loss: %f" % (np.sum(train_loss) / n_batch))
     print("   train acc: %f" % (np.sum(train_acc) / n_batch))
@@ -202,8 +202,8 @@ for epoch in range(n_epoch):
     val_loss, val_acc, n_batch = 0, 0, 0
     for x_val_a, y_val_a in minibatches(x_val, y_val, batch_size, shuffle=False):
         err, ac = sess.run([loss, acc], feed_dict={x: x_val_a, y_: y_val_a})
-        val_loss += err;
-        val_acc += ac;
+        val_loss += err
+        val_acc += ac
         n_batch += 1
     print("   validation loss: %f" % (np.sum(val_loss) / n_batch))
     print("   validation acc: %f" % (np.sum(val_acc) / n_batch))
