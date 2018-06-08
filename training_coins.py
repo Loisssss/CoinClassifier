@@ -10,10 +10,10 @@ from tensorflow.python.framework import graph_util
 
 #path of dataset
 # path='D:/Download/CoinsDatasets/coins_photo/'
-path = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/CoinPhotos'
+path = './data/coins'
 #path to store model
 # model_path='D:/Download/CoinsDatasets/model/coins/model.ckpt'
-model_path = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.ckpt'
+model_path = './data/model.ckpt'
 
 #resize all photos into 100*100 and rgb
 w=224
@@ -210,7 +210,7 @@ for epoch in range(n_epoch):
     print("   -----------------------------")
 
 constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ["logits_eval"])
-with tf.gfile.FastGFile('/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.pb', mode='wb') as f:
+with tf.gfile.FastGFile('./data/model.pb', mode='wb') as f:
     f.write(constant_graph.SerializeToString())
 saver.save(sess, model_path)
 sess.close()

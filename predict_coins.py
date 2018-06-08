@@ -2,11 +2,11 @@ from skimage import io,transform
 import tensorflow as tf
 import numpy as np
 
-path1 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/1euro.jpg"
-path2 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2cent.jpg"
-path3 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/2euro.jpg"
-path4 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/10cent.jpg"
-path5 = "/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/testPhoto/50cent.jpg"
+path1 = "./data/test/1euro.jpg"
+path2 = "./data/test/2cent.jpg"
+path3 = "./data/test/2euro.jpg"
+path4 = "./data/test/10cent.jpg"
+path5 = "./data/test/50cent.jpg"
 flower_dict = {0:'1 euro',1:'2 euro',2:'10 cent',3:'50 cent',4:'2 cent'}
 
 w=224
@@ -21,7 +21,7 @@ def read_one_image(path):
 
 with tf.Graph().as_default():
     output_graph_def = tf.GraphDef()
-    output_graph_path = '/home/yaoling/Desktop/githubProject/CoinClassifier/Coindatasets/model/model.pb'
+    output_graph_path = './data/model.pb'
     #sess.graph.add_to_collection("input", mnist.test.images)
 
     with open(output_graph_path, "rb") as f:
@@ -40,9 +40,6 @@ with tf.Graph().as_default():
         data.append(data3)
         data.append(data4)
         data.append(data5)
-
-        # saver = tf.train.import_meta_graph('/home/yaoling/Desktop/githubProject/CoinClassifier/CoinsDatasets/model/model.ckpt.meta')
-        # saver.restore(sess,tf.train.latest_checkpoint('/home/yaoling/Desktop/githubProject/CoinClassifier/CoinsDatasets/model/'))
 
         graph = tf.get_default_graph()
         x = graph.get_tensor_by_name("x:0")
