@@ -1,6 +1,5 @@
 package com.yaoling.coinclassifier;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -22,6 +21,7 @@ public class AlbumActivity extends AppCompatActivity {
     private Button button;
     private static final int IMAGE = 1;
 
+    private static final String TAG = AlbumActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,32 +36,27 @@ public class AlbumActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        //get photo path
-        if (requestCode == IMAGE && resultCode == AlbumActivity.RESULT_OK && data != null) {
-            Uri selectedImage = data.getData();
-            String[] filePathColumns = {MediaStore.Images.Media.DATA};
-            Cursor c = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
-            c.moveToFirst();
-            int columnIndex = c.getColumnIndex(filePathColumns[0]);
-            String imagePath = c.getString(columnIndex);
+        if (requestCode == IMAGE && resultCode == RESULT_OK && data != null) {
+            Uri imageUri = data.getData();
+            String[] projection = { MediaStore.Images.Media.DATA };
+            Cursor cursor = getContentResolver().query(imageUri, projection, null, null, null);
+            cursor.moveToFirst();
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            String imagePath = cursor.getString(columnIndex);
+            cursor.close();
+
             showImage(imagePath);
-            c.close();
         }
     }
 
 
-    public void PickImage(View view){
-
-        Intent intent = new Intent(Intent.ACTION_PICK,
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+    public void PickImage(View view) {
+        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, IMAGE);
     }
 
     private void showImage(String imagePath){
-
-        Bitmap bm = BitmapFactory.decodeFile(imagePath);
-        imageView.setImageBitmap(bm);
-
+        Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+        imageView.setImageBitmap(bitmap);
     }
 }
