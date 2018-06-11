@@ -14,12 +14,22 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.util.Collection;
+
 public class AlbumActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private TextView textView;
     private Button button;
     private static final int IMAGE = 1;
+    TensorFlowImageClassifier classifier;
+    private static final int PREVIEW_IMAGE_WIDTH = 640;
+    private static final int PREVIEW_IMAGE_HEIGHT = 480;
+    private static final int TF_INPUT_IMAGE_WIDTH = 224;
+    private static final int TF_INPUT_IMAGE_HEIGHT = 224;
+    ImagePreprocessor imagePreprocessor = new ImagePreprocessor(PREVIEW_IMAGE_WIDTH, PREVIEW_IMAGE_HEIGHT,
+                                               TF_INPUT_IMAGE_WIDTH, TF_INPUT_IMAGE_HEIGHT);
 
     private static final String TAG = AlbumActivity.class.getSimpleName();
 
@@ -27,6 +37,14 @@ public class AlbumActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_album);
+
+        try {
+            classifier = new TensorFlowImageClassifier(this,
+                    224, 224);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         imageView = findViewById(R.id.imageView);
         textView = findViewById(R.id.textView);
@@ -45,7 +63,10 @@ public class AlbumActivity extends AppCompatActivity {
             String imagePath = cursor.getString(columnIndex);
             cursor.close();
 
-            showImage(imagePath);
+            Bitmap bitmap = showImage(imagePath);
+            bitmap = imagePreprocessor.preprocessBitmap(bitmap);
+            final Collection<Recognition> results = classifier.doRecognize(bitmap);
+            textView.setText(results.toString());
         }
     }
 
@@ -55,8 +76,9 @@ public class AlbumActivity extends AppCompatActivity {
         startActivityForResult(intent, IMAGE);
     }
 
-    private void showImage(String imagePath){
+    private Bitmap showImage(String imagePath){
         Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
         imageView.setImageBitmap(bitmap);
+        return bitmap;
     }
 }

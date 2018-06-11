@@ -19,6 +19,7 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 
@@ -28,15 +29,28 @@ public class PhotoActivity extends AppCompatActivity {
     private TextView textView;
     private Button button;
     private String tempPhotoPath;
+    TensorFlowImageClassifier classifier;
+    private static final int PREVIEW_IMAGE_WIDTH = 640;
+    private static final int PREVIEW_IMAGE_HEIGHT = 480;
+    private static final int TF_INPUT_IMAGE_WIDTH = 224;
+    private static final int TF_INPUT_IMAGE_HEIGHT = 224;
+    ImagePreprocessor imagePreprocessor = new ImagePreprocessor(PREVIEW_IMAGE_WIDTH, PREVIEW_IMAGE_HEIGHT,
+            TF_INPUT_IMAGE_WIDTH, TF_INPUT_IMAGE_HEIGHT);
 
     private static final int REQUEST_CODE_TAKE_PHOTO = 1;
     private static final String TAG = PhotoActivity.class.getSimpleName();
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo);
+        try {
+            classifier = new TensorFlowImageClassifier(this,
+                    224, 224);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         imageView = findViewById(R.id.imageView);
         textView = findViewById(R.id.textView);
@@ -46,7 +60,10 @@ public class PhotoActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_TAKE_PHOTO && resultCode == RESULT_OK) {
-            setPhoto();
+            Bitmap bitmap = setPhoto();
+            bitmap = imagePreprocessor.preprocessBitmap(bitmap);
+            final Collection<Recognition> results = classifier.doRecognize(bitmap);
+            textView.setText(results.toString());
         }
     }
 
@@ -75,7 +92,7 @@ public class PhotoActivity extends AppCompatActivity {
         return image;
     }
 
-    private void setPhoto() {
+    private Bitmap setPhoto() {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(tempPhotoPath, options);
@@ -91,6 +108,8 @@ public class PhotoActivity extends AppCompatActivity {
 
         Bitmap bitmap = BitmapFactory.decodeFile(tempPhotoPath, options);
         imageView.setImageBitmap(bitmap);
+
+        return bitmap;
     }
 }
 
