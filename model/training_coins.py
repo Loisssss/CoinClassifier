@@ -52,7 +52,7 @@ y_val=label[s:]
 
 # ----------------------build network----------------------
 #place holder
-x=tf.placeholder(tf.float32,shape=[None,w,h,c],name='x')
+x=tf.placeholder(tf.float32,shape=[1,w,h,c],name='x')
 y_=tf.placeholder(tf.int32,shape=[None,],name='y_')
 
 
@@ -180,8 +180,8 @@ def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
         yield inputs[excerpt], targets[excerpt]
 
 #训练和测试数据，可将n_epoch设置更大一些
-n_epoch=10
-batch_size=64
+n_epoch=1
+batch_size=1
 saver=tf.train.Saver()
 sess=tf.Session()
 sess.run(tf.global_variables_initializer())
@@ -212,5 +212,9 @@ for epoch in range(n_epoch):
 constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ["logits_eval"])
 with tf.gfile.FastGFile('./data/model.pb', mode='wb') as f:
     f.write(constant_graph.SerializeToString())
+
+tflite_model = tf.contrib.lite.toco_convert(constant_graph, [x], [logits_eval])
+open('../app/assets/model.tflite', 'wb').write(tflite_model)
+
 saver.save(sess, model_path)
 sess.close()

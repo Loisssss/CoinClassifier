@@ -21,7 +21,7 @@ public class TensorFlowImageClassifier {
     private static final String TAG = "TFImageClassifier";
 
     private static final String LABELS_FILE = "labels.txt";
-    private static final String MODEL_FILE = "mobilenet_quant_v1_224.tflite";
+    private static final String MODEL_FILE = "model.tflite";
 
     /** Dimensions of inputs. */
     private static final int DIM_BATCH_SIZE = 1;
@@ -34,7 +34,7 @@ public class TensorFlowImageClassifier {
     private ByteBuffer imgData = null;
 
     /** Inference results (Tensorflow Lite output). */
-    private byte[][] confidencePerLabel = null;
+    private float[][] confidencePerLabel = null;
 
     /** Pre-allocated buffer for intermediate bitmap pixels */
     private int[] intValues;
@@ -50,11 +50,13 @@ public class TensorFlowImageClassifier {
         this.tfLite = new Interpreter(TensorFlowHelper.loadModelFile(context, MODEL_FILE));
         this.labels = TensorFlowHelper.readLabels(context, LABELS_FILE);
 
+        // TODO: Use float per pixel representation now. Change model input in the future.
+        int float32Size = 4;
         imgData =
                 ByteBuffer.allocateDirect(
-                        DIM_BATCH_SIZE * inputImageWidth * inputImageHeight * DIM_PIXEL_SIZE);
+                        float32Size * DIM_BATCH_SIZE * inputImageWidth * inputImageHeight * DIM_PIXEL_SIZE);
         imgData.order(ByteOrder.nativeOrder());
-        confidencePerLabel = new byte[1][labels.size()];
+        confidencePerLabel = new float[1][labels.size()];
 
         // Pre-allocate buffer for image pixels.
         intValues = new int[inputImageWidth * inputImageHeight];
