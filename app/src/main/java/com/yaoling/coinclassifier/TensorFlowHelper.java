@@ -86,7 +86,7 @@ public class TensorFlowHelper {
 
         for (int i = 0; i < labelList.size(); ++i) {
             Recognition r = new Recognition( String.valueOf(i),
-                    labelList.get(i), labelProbArray[0][i]);
+                    labelList.get(i), (labelProbArray[0][i] ) / 255.0f);
             sortedLabels.add(r);
             if (r.getConfidence() > 0) {
                 Log.d("ImageRecognition", r.toString());
@@ -118,9 +118,13 @@ public class TensorFlowHelper {
         for (int i = 0; i < bitmap.getWidth(); ++i) {
             for (int j = 0; j < bitmap.getHeight(); ++j) {
                 final int val = intValues[pixel++];
-                imgData.put((byte) ((val >> 16) & 0xFF));
-                imgData.put((byte) ((val >> 8) & 0xFF));
-                imgData.put((byte) (val & 0xFF));
+                imgData.putFloat(((val >> 16) & 0xFF) / 255.0f);
+                imgData.putFloat(((val >> 8) & 0xFF) / 255.0f);
+                imgData.putFloat((val & 0xFF) / 255.0f);
+
+//                imgData.put((byte) ((val >> 16) & 0xFF));
+//                imgData.put((byte) ((val >> 8) & 0xFF));
+//                imgData.put((byte) (val & 0xFF));
             }
         }
     }

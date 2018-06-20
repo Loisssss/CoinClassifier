@@ -37,6 +37,7 @@ dependencies {
     implementation 'com.otaliastudios:cameraview:1.5.1'
     implementation 'org.tensorflow:tensorflow-android:1.8.0'
     implementation 'org.tensorflow:tensorflow-lite:0.1.7'
+    implementation 'com.github.ctodobom:OpenCV-3.1.0-Android:-SNAPSHOT'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

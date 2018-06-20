@@ -35,10 +35,10 @@ with tf.Graph().as_default():
         data3 = read_one_image(path3)
         data4 = read_one_image(path4)
         data5 = read_one_image(path5)
-        data.append(data1)
-        data.append(data2)
-        data.append(data3)
-        data.append(data4)
+        # data.append(data1)
+        # data.append(data2)
+        # data.append(data3)
+        # data.append(data4)
         data.append(data5)
 
         graph = tf.get_default_graph()
@@ -53,6 +53,11 @@ with tf.Graph().as_default():
         print(classification_result)
         # 打印出预测矩阵每一行最大值的索引
         print(tf.argmax(classification_result, 1).eval())
+        print(tf.nn.softmax(classification_result, name = "softmax_tensor"))
+
+        # tf.argmax(input=logits, axis=1)
+        # tf.nn.softmax(logits, name="softmax_tensor")
+
         # 根据索引通过字典对应花的分类
         output = []
         output = tf.argmax(classification_result, 1).eval()

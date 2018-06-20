@@ -46,7 +46,7 @@ public class PhotoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_photo);
         try {
             classifier = new TensorFlowImageClassifier(this,
-                    224, 224);
+                    TF_INPUT_IMAGE_WIDTH, TF_INPUT_IMAGE_HEIGHT);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);

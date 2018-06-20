@@ -6,6 +6,11 @@ import tensorflow as tf
 import numpy as np
 import time
 from tensorflow.python.framework import graph_util
+import tempfile
+import subprocess
+tf.contrib.lite.tempfile = tempfile
+tf.contrib.lite.subprocess = subprocess
+
 
 
 #path of dataset
@@ -18,6 +23,7 @@ model_path = './data/model.ckpt'
 #resize all photos into 100*100 and rgb
 w=224
 h=224
+
 c=3
 
 #read photos
@@ -52,15 +58,15 @@ y_val=label[s:]
 
 # ----------------------build network----------------------
 #place holder
-x=tf.placeholder(tf.float32,shape=[1,w,h,c],name='x')
-y_=tf.placeholder(tf.int32,shape=[None,],name='y_')
+x=tf.placeholder(name='x', dtype=tf.float32, shape=[1,w,h,c])
+y_=tf.placeholder(name='y_', dtype= tf.int32, shape=[None,])
 
 
 def inference(input_tensor, train, regularizer):
     with tf.variable_scope('layer1-conv1'):
         # 5 is input width, 5 is input height
         # 3 is input size and 32 is output size
-        conv1_weights = tf.get_variable("weight",[5,5,3,32],initializer=tf.contrib.layers.xavier_initializer())
+        conv1_weights = tf.get_variable("weight",[5,5,3,32],initializer=tf.truncated_normal_initializer(stddev = 0.1))
         conv1_biases = tf.get_variable("bias", [32], initializer=tf.constant_initializer(0.0))
         # strides means skip, 1 is not skip any sample
         conv1 = tf.nn.conv2d(input_tensor, conv1_weights, strides=[1, 1, 1, 1], padding='SAME')
@@ -70,7 +76,7 @@ def inference(input_tensor, train, regularizer):
         pool1 = tf.nn.max_pool(relu1, ksize = [1,2,2,1],strides=[1,2,2,1],padding="VALID")
 
     with tf.variable_scope("layer3-conv2"):
-        conv2_weights = tf.get_variable("weight",[5,5,32,64],initializer=tf.contrib.layers.xavier_initializer())
+        conv2_weights = tf.get_variable("weight",[5,5,32,64],initializer=tf.truncated_normal_initializer(stddev = 0.1))
         conv2_biases = tf.get_variable("bias", [64], initializer=tf.constant_initializer(0.0))
         conv2 = tf.nn.conv2d(pool1, conv2_weights, strides=[1, 1, 1, 1], padding='SAME')
         relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_biases))
@@ -79,7 +85,7 @@ def inference(input_tensor, train, regularizer):
         pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     with tf.variable_scope("layer5-conv3"):
-        conv3_weights = tf.get_variable("weight",[3,3,64,128],initializer=tf.contrib.layers.xavier_initializer())
+        conv3_weights = tf.get_variable("weight",[3,3,64,128],initializer=tf.truncated_normal_initializer(stddev = 0.1))
         conv3_biases = tf.get_variable("bias", [128], initializer=tf.constant_initializer(0.0))
         conv3 = tf.nn.conv2d(pool2, conv3_weights, strides=[1, 1, 1, 1], padding='SAME')
         relu3 = tf.nn.relu(tf.nn.bias_add(conv3, conv3_biases))
@@ -88,65 +94,67 @@ def inference(input_tensor, train, regularizer):
         pool3 = tf.nn.max_pool(relu3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     with tf.variable_scope("layer7-conv4"):
-        conv4_weights = tf.get_variable("weight",[3,3,128,256],initializer=tf.contrib.layers.xavier_initializer())
-        conv4_biases = tf.get_variable("bias", [256], initializer=tf.constant_initializer(0.0))
+        conv4_weights = tf.get_variable("weight",[3,3,128,128],initializer=tf.truncated_normal_initializer(stddev = 0.1))
+        conv4_biases = tf.get_variable("bias", [128], initializer=tf.constant_initializer(0.0))
         conv4 = tf.nn.conv2d(pool3, conv4_weights, strides=[1, 1, 1, 1], padding='SAME')
         relu4 = tf.nn.relu(tf.nn.bias_add(conv4, conv4_biases))
 
     with tf.name_scope("layer8-pool4"):
         pool4 = tf.nn.max_pool(relu4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-        # nodes = 6*6*128
-        # reshaped = tf.reshape(pool4,[-1,nodes])
+        nodes = 14*14*128
+        reshaped = tf.reshape(pool4,[-1,nodes])
 
 
-    # ///////////////////////
-    with tf.variable_scope("layer9-conv5"):
-        conv5_weights = tf.get_variable("weight", [2,2,256,256], initializer=tf.contrib.layers.xavier_initializer())
-        conv5_biases = tf.get_variable("bias", [256], initializer=tf.constant_initializer(0.0))
-        conv5 = tf.nn.conv2d(pool4, conv5_weights, strides=[1,1,1,1], padding='SAME')
-        relu5 = tf.nn.relu(tf.nn.bias_add(conv5, conv5_biases))
-    with tf.name_scope("layer10-pool5"):
-        pool5 = tf.nn.max_pool(relu5, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
-        nodes = 7*7*256
-        reshaped = tf.reshape(pool5,[-1, nodes])
+    # # ///////////////////////
+    # with tf.variable_scope("layer9-conv5"):
+    #     conv5_weights = tf.get_variable("weight", [2,2,256,256], initializer=tf.contrib.layers.xavier_initializer())
+    #     conv5_biases = tf.get_variable("bias", [256], initializer=tf.constant_initializer(0.0))
+    #     conv5 = tf.nn.conv2d(pool4, conv5_weights, strides=[1,1,1,1], padding='SAME')
+    #     relu5 = tf.nn.relu(tf.nn.bias_add(conv5, conv5_biases))
+    # with tf.name_scope("layer10-pool5"):
+    #     pool5 = tf.nn.max_pool(relu5, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+    #     nodes = 7*7*256
+    #     reshaped = tf.reshape(pool5,[-1, nodes])
     # //////////////////////////
 
 
     with tf.variable_scope('layer9-fc1'):
-        fc1_weights = tf.get_variable("weight", [nodes, 2048],
-                                      initializer=tf.contrib.layers.xavier_initializer())
+        fc1_weights = tf.get_variable("weight", [nodes, 1024],
+                                      initializer=tf.truncated_normal_initializer(stddev = 0.1))
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc1_weights))
-        fc1_biases = tf.get_variable("bias", [2048], initializer=tf.constant_initializer(0.1))
+        fc1_biases = tf.get_variable("bias", [1024], initializer=tf.constant_initializer(0.1))
 
         fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weights) + fc1_biases)
         if train: fc1 = tf.nn.dropout(fc1, 0.5)
 
     with tf.variable_scope('layer10-fc2'):
-        fc2_weights = tf.get_variable("weight", [2048, 1024],
-                                      initializer=tf.contrib.layers.xavier_initializer())
+        fc2_weights = tf.get_variable("weight", [1024, 512],
+                                      initializer=tf.truncated_normal_initializer(stddev = 0.1))
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc2_weights))
-        fc2_biases = tf.get_variable("bias", [1024], initializer=tf.constant_initializer(0.1))
+        fc2_biases = tf.get_variable("bias", [512], initializer=tf.constant_initializer(0.1))
 
         fc2 = tf.nn.relu(tf.matmul(fc1, fc2_weights) + fc2_biases)
         if train: fc2 = tf.nn.dropout(fc2, 0.5)
 
     with tf.variable_scope('layer11-fc3'):
-        fc3_weights = tf.get_variable("weight", [1024, 512],
-                                      initializer=tf.contrib.layers.xavier_initializer())
+        fc3_weights = tf.get_variable("weight", [512, 5],
+                                      initializer=tf.truncated_normal_initializer(stddev = 0.1))
         if regularizer != None: tf.add_to_collection('losses', regularizer(fc3_weights))
 
-        # fc3_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
-        # logit = tf.matmul(fc2, fc3_weights) + fc3_biases
-        fc3_biases = tf.get_variable("bias", [512], initializer=tf.constant_initializer(0.1))
-        fc3 = tf.nn.relu(tf.matmul(fc2, fc3_weights) + fc3_biases)
-        if train: fc3 = tf.nn.dropout(fc3, 0.5)
+        fc3_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
+        logit = tf.matmul(fc2, fc3_weights) + fc3_biases
 
-    with tf.variable_scope('layer12-fc4'):
-        fc4_weights = tf.get_variable("weight", [512, 5],
-                                      initializer=tf.contrib.layers.xavier_initializer())
-        if regularizer != None: tf.add_to_collection('losses', regularizer(fc4_weights))
-        fc4_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
-        logit = tf.matmul(fc3, fc4_weights) + fc4_biases
+
+        # fc3_biases = tf.get_variable("bias", [512], initializer=tf.constant_initializer(0.1))
+        # fc3 = tf.nn.relu(tf.matmul(fc2, fc3_weights) + fc3_biases)
+        # if train: fc3 = tf.nn.dropout(fc3, 0.5)
+
+    # with tf.variable_scope('layer12-fc4'):
+    #     fc4_weights = tf.get_variable("weight", [512, 5],
+    #                                   initializer=tf.truncated_normal_initializer(stddev = 0.1))
+    #     if regularizer != None: tf.add_to_collection('losses', regularizer(fc4_weights))
+    #     fc4_biases = tf.get_variable("bias", [5], initializer=tf.constant_initializer(0.1))
+    #     logit = tf.matmul(fc3, fc4_weights) + fc4_biases
 
 
     return logit
@@ -165,6 +173,7 @@ train_op=tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 correct_prediction = tf.equal(tf.cast(tf.argmax(logits,1),tf.int32), y_)
 acc= tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+
 #定义一个函数，按批次取数据
 #mini batch：每次随机选择batch_size 个样本，损失函数定义在batch_size 个样本上。每次都是在batch_size个样本上作梯度下降。
 def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
@@ -180,7 +189,7 @@ def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
         yield inputs[excerpt], targets[excerpt]
 
 #训练和测试数据，可将n_epoch设置更大一些
-n_epoch=1
+n_epoch = 8
 batch_size=1
 saver=tf.train.Saver()
 sess=tf.Session()
@@ -210,11 +219,12 @@ for epoch in range(n_epoch):
     print("   -----------------------------")
 
 constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ["logits_eval"])
+
 with tf.gfile.FastGFile('./data/model.pb', mode='wb') as f:
     f.write(constant_graph.SerializeToString())
 
-tflite_model = tf.contrib.lite.toco_convert(constant_graph, [x], [logits_eval])
-open('../app/assets/model.tflite', 'wb').write(tflite_model)
+tflite_model = tf.contrib.lite.toco_convert(constant_graph, [x], [logits_eval]) #这里[input], [out]这里分别是输入tensor或者输出tensor的集合,是变量实体不是名字
+open("../app/assets/model.tflite", "wb").write(tflite_model)
 
-saver.save(sess, model_path)
+# saver.save(sess, model_path)
 sess.close()

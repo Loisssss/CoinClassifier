@@ -20,7 +20,7 @@ public class TensorFlowImageClassifier {
 
     private static final String TAG = "TFImageClassifier";
 
-    private static final String LABELS_FILE = "labels.txt";
+    private static final String LABELS_FILE = "label.txt";
     private static final String MODEL_FILE = "model.tflite";
 
     /** Dimensions of inputs. */
@@ -50,11 +50,9 @@ public class TensorFlowImageClassifier {
         this.tfLite = new Interpreter(TensorFlowHelper.loadModelFile(context, MODEL_FILE));
         this.labels = TensorFlowHelper.readLabels(context, LABELS_FILE);
 
-        // TODO: Use float per pixel representation now. Change model input in the future.
-        int float32Size = 4;
         imgData =
                 ByteBuffer.allocateDirect(
-                        float32Size * DIM_BATCH_SIZE * inputImageWidth * inputImageHeight * DIM_PIXEL_SIZE);
+                        DIM_BATCH_SIZE * inputImageWidth * inputImageHeight * DIM_PIXEL_SIZE * 4);
         imgData.order(ByteOrder.nativeOrder());
         confidencePerLabel = new float[1][labels.size()];
 
@@ -87,5 +85,6 @@ public class TensorFlowImageClassifier {
 
         // Get the results with the highest confidence and map them to their labels
         return TensorFlowHelper.getBestResults(confidencePerLabel, labels);
+
     }
 }
