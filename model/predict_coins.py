@@ -6,7 +6,7 @@ path1 = "./data/test/1euro.jpg"
 path2 = "./data/test/2cent.jpg"
 path3 = "./data/test/2euro.jpg"
 path4 = "./data/test/10cent.jpg"
-path5 = "./data/test/50cent.jpg"
+path5 = "./data/test/50cent6.jpg"
 flower_dict = {0:'1 euro',1:'2 euro',2:'10 cent',3:'50 cent',4:'2 cent'}
 
 w=224

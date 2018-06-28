@@ -56,4 +56,5 @@ public class Recognition {
 
         return resultString.trim();
     }
+
 }

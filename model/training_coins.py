@@ -36,6 +36,7 @@ def read_img(path):
             print('reading the images:%s'%(im))
             img=io.imread(im)
             img=transform.resize(img,(w,h))
+
             imgs.append(img)
             labels.append(idx)
     return np.asarray(imgs,np.float32),np.asarray(labels,np.int32)
@@ -169,7 +170,7 @@ b = tf.constant(value=1,dtype=tf.float32)
 logits_eval = tf.multiply(logits,b,name='logits_eval')
 
 loss=tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=y_)
-train_op=tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+train_op=tf.train.AdamOptimizer(learning_rate=0.0001).minimize(loss)
 correct_prediction = tf.equal(tf.cast(tf.argmax(logits,1),tf.int32), y_)
 acc= tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
@@ -189,7 +190,7 @@ def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
         yield inputs[excerpt], targets[excerpt]
 
 #训练和测试数据，可将n_epoch设置更大一些
-n_epoch = 8
+n_epoch = 16
 batch_size=1
 saver=tf.train.Saver()
 sess=tf.Session()
@@ -207,7 +208,7 @@ for epoch in range(n_epoch):
     print("   train loss: %f" % (np.sum(train_loss) / n_batch))
     print("   train acc: %f" % (np.sum(train_acc) / n_batch))
 
-    # validation
+# validation
     val_loss, val_acc, n_batch = 0, 0, 0
     for x_val_a, y_val_a in minibatches(x_val, y_val, batch_size, shuffle=False):
         err, ac = sess.run([loss, acc], feed_dict={x: x_val_a, y_: y_val_a})

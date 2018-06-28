@@ -21,16 +21,21 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import org.opencv.core.Core;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -40,7 +45,7 @@ import java.util.PriorityQueue;
  */
 public class TensorFlowHelper {
 
-    private static final int RESULTS_TO_SHOW = 5;
+    private static final int RESULTS_TO_SHOW = 1;
 
     /**
      * Memory-map the model file in Assets.
@@ -73,35 +78,23 @@ public class TensorFlowHelper {
     /**
      * Find the best classifications.
       */
+
     public static Collection<Recognition> getBestResults(float[][] labelProbArray,
                                                          List<String> labelList) {
-        PriorityQueue<Recognition> sortedLabels = new PriorityQueue<>(RESULTS_TO_SHOW,
-                new Comparator<Recognition>() {
-                    @Override
-                    public int compare(Recognition lhs, Recognition rhs) {
-                        return Float.compare(lhs.getConfidence(), rhs.getConfidence());
-                    }
-                });
-
-
-        for (int i = 0; i < labelList.size(); ++i) {
-            Recognition r = new Recognition( String.valueOf(i),
-                    labelList.get(i), (labelProbArray[0][i] ) / 255.0f);
-            sortedLabels.add(r);
-            if (r.getConfidence() > 0) {
-                Log.d("ImageRecognition", r.toString());
-            }
-            if (sortedLabels.size() > RESULTS_TO_SHOW) {
-                sortedLabels.poll();
-            }
+        ArrayList<Recognition> recognitions = new ArrayList<>();
+        for (int i = 0; i < labelList.size(); i++) {
+            Recognition r = new Recognition(String.valueOf(i), labelList.get(i), labelProbArray[0][i]);
+            recognitions.add(r);
         }
 
-        List<Recognition> results = new ArrayList<>(RESULTS_TO_SHOW);
-        for (Recognition r: sortedLabels) {
-            results.add(0, r);
-        }
+        Collections.sort(recognitions, new Comparator<Recognition>() {
+            @Override
+            public int compare(Recognition o1, Recognition o2) {
+                return 0 - Float.compare(o1.getConfidence(), o2.getConfidence());
+            }
+        });
 
-        return results;
+        return recognitions.subList(0, RESULTS_TO_SHOW);
     }
 
     /** Writes Image data into a {@code ByteBuffer}. */

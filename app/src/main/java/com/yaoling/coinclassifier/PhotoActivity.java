@@ -16,6 +16,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -25,6 +32,7 @@ import java.util.Locale;
 
 public class PhotoActivity extends AppCompatActivity {
 
+    private CircleActivity circleActivity;
     private ImageView imageView;
     private TextView textView;
     private Button button;
@@ -39,6 +47,12 @@ public class PhotoActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_TAKE_PHOTO = 1;
     private static final String TAG = PhotoActivity.class.getSimpleName();
+
+    static {
+        if (!OpenCVLoader.initDebug()) {
+            Log.wtf(TAG, "static initializer: OpenCV failed to load!");
+        }
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,12 +72,33 @@ public class PhotoActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        BaseLoaderCallback callback = new BaseLoaderCallback(this) {
+            @Override
+            public void onManagerConnected(int status) {
+                switch (status) {
+                    case SUCCESS:
+                        Log.i(TAG, "onManagerConnected: OpenCV loaded successfully");
+                        break;
+                    default:
+                        super.onManagerConnected(status);
+                        Log.e(TAG, "onManagerConnected: OpenCV load failed");
+                }
+            }
+        };
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, callback);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_TAKE_PHOTO && resultCode == RESULT_OK) {
             Bitmap bitmap = setPhoto();
             bitmap = imagePreprocessor.preprocessBitmap(bitmap);
             final Collection<Recognition> results = classifier.doRecognize(bitmap);
             textView.setText(results.toString());
+
+
         }
     }
 
@@ -107,9 +142,22 @@ public class PhotoActivity extends AppCompatActivity {
         options.inSampleSize = scaleFactor;
 
         Bitmap bitmap = BitmapFactory.decodeFile(tempPhotoPath, options);
-        imageView.setImageBitmap(bitmap);
 
-        return bitmap;
+        // change Bitmap to mat
+        Mat srcImage = new Mat(bitmap.getWidth(), bitmap.getHeight(), CvType.CV_8UC1);
+        Utils.bitmapToMat(bitmap, srcImage);
+        Imgproc.cvtColor(srcImage, srcImage, Imgproc.COLOR_BGR2GRAY,0);
+
+        circleActivity = new CircleActivity();
+        circleActivity.findEllipses(srcImage);
+        // change Mat to Bitmap
+        Bitmap processedImage = Bitmap.createBitmap(srcImage.cols(), srcImage.rows(), Bitmap.Config.ARGB_8888);
+        //System.out.print(processedImage.getWidth());
+        Utils.matToBitmap(srcImage, processedImage);
+
+        imageView.setImageBitmap(processedImage);
+
+        return processedImage;
     }
 }
 
