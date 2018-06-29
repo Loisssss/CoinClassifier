@@ -38,7 +38,7 @@ import java.nio.ByteBuffer;
  * Class that process an Image and extracts a Bitmap in a format appropriate for
  * the TensorFlow model.
  */
-public class ImagePreprocessor {
+public class  ImagePreprocessor {
     private static final boolean SAVE_PREVIEW_BITMAP = false;
 
     private Bitmap rgbFrameBitmap;

@@ -74,7 +74,7 @@ public class TensorFlowImageClassifier {
      *              format expected by the classification process, which can be time
      *              and power consuming.
      */
-    public Collection<Recognition> doRecognize(Bitmap image) {
+    public List<Recognition> doRecognize(Bitmap image) {
         TensorFlowHelper.convertBitmapToByteBuffer(image, intValues, imgData);
 
         long startTime = SystemClock.uptimeMillis();

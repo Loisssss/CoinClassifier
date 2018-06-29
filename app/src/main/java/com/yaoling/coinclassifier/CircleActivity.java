@@ -1,6 +1,7 @@
 package com.yaoling.coinclassifier;
 
 
+import android.content.ReceiverCallNotAllowedException;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.ImageView;
@@ -16,7 +17,9 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -92,11 +95,11 @@ public class CircleActivity {
         Log.i(TAG, "Contour count " + contours.size());
         Log.i(TAG, "Ellipse count " + rects.size());
 
-        int i = 0;
         List<Rect> ROIs = new ArrayList<>();
+        List<Rect> newROIs = new ArrayList<>();
+        List<Rect> copyROIs = new ArrayList<>();
 
         for (RotatedRect rect: rects) {
-            i++;
             Point[] pts = new Point[4];
             rect.points(pts);
             Imgproc.rectangle(input, pts[1], pts[3], new Scalar(255, 0, 0, 0), 2);
@@ -109,22 +112,63 @@ public class CircleActivity {
             Rect area=new Rect(startx, starty, width , height);
 //            Mat ROI = new Mat(input, area);
             ROIs.add(area);
-//            Imgcodecs.imwrite(inPath +"/ROI/" + i + ".jpg", ROI);
+            newROIs.add(area);
         }
-        ROIs.size();
+
+//        List<Rect> rectsToRemove = new ArrayList<Rect>();
+//        for (int i = 0; i < ROIs.size(); i++) {
+//            Rect rect = ROIs.get(i);
+//
+//            for (int j = 0; j < ROIs.size(); j++) {
+//                if (j == i) { continue; }
+//                Rect other = ROIs.get(j);
+//
+//                if(Math.abs((other.x ) - (rect.x )) < 30
+//                        && Math.abs((other.x ) - (rect.x )) > 2
+//                        && Math.abs((other.y ) - (rect.y )) < 30
+//                        && Math.abs((other.y ) - (rect.y )) > 2 ) {
+//                   rectsToRemove.add(rect);
+//                }
+//            }
+//        }
+//        HashSet<Rect> set = new HashSet<Rect>(rectsToRemove);
+//        List<Rect> rectsToRemoveSet = new ArrayList<Rect>(set);
+//
+//        ROIs.removeAll(rectsToRemoveSet);
+//        ROIs.size();
+
+
+//
+//        for (Iterator<Rect> ROIiterator = ROIs.iterator(); ROIiterator.hasNext();){
+//            ROIiterator.next();
+//            Rect rectFilt = ROIiterator.next();
+//
+//            for (Rect select : ROIs) {
+//                ROIiterator = ROIs.iterator();
+//                if (Math.abs(select.x - rectFilt.x ) < 100 && Math.abs(select.x - rectFilt.x ) > 0 &&
+//                        Math.abs(select.y - rectFilt.y) < 100 && Math.abs(select.y - rectFilt.y) > 0){
+//                    ROIiterator.next();
+//                    ROIiterator.remove();
+//
+//                }
+//            }
+//        }
+
 
         Iterator<Rect> ROIiterator = ROIs.iterator();
-        while (ROIiterator.hasNext()){
+        while (ROIiterator.hasNext()) {
             Rect rectFilt = ROIiterator.next();
-            for(Rect s : ROIs){
-                if(Math.abs(s.x - rectFilt.x ) < 50 && Math.abs(s.x - rectFilt.x ) > 0 &&
-                        Math.abs(s.y - rectFilt.y) < 50 && Math.abs(s.y - rectFilt.y) > 0 ){
+            for (int i = 0; i < ROIs.size(); i++) {
+                if (Math.abs(ROIs.get(i).x - rectFilt.x) < 100 && Math.abs(ROIs.get(i).x - rectFilt.x) > 1 &&
+                        Math.abs(ROIs.get(i).y - rectFilt.y) < 100 && Math.abs(ROIs.get(i).y - rectFilt.y) > 1) {
+                    copyROIs.add(ROIs.get(i));
                     ROIiterator.remove();
                 }
             }
         }
-        ROIs.size();
+
         String inPath = getInnerSDCardPath();
+        delAllFile(inPath+"/ROI");
         for (int k = 0; k <ROIs.size(); k++){
             Imgcodecs.imwrite(inPath + "/ROI/" + k +".jpg",new Mat(input, ROIs.get(k)));
         }
@@ -175,6 +219,34 @@ public class CircleActivity {
 
     public String getInnerSDCardPath() {
         return Environment.getExternalStorageDirectory().getPath();
+    }
+
+    public static boolean delAllFile(String path) {
+        boolean flag = false;
+        File file = new File(path);
+        if (!file.exists()) {
+            return flag;
+        }
+        if (!file.isDirectory()) {
+            return flag;
+        }
+        String[] tempList = file.list();
+        File temp = null;
+        for (int i = 0; i < tempList.length; i++) {
+            if (path.endsWith(File.separator)) {
+                temp = new File(path + tempList[i]);
+            } else {
+                temp = new File(path + File.separator + tempList[i]);
+            }
+            if (temp.isFile()) {
+                temp.delete();
+            }
+            if (temp.isDirectory()) {
+                delAllFile(path + "/" + tempList[i]);//先删除文件夹里面的文件
+                flag = true;
+            }
+        }
+        return flag;
     }
 
 }

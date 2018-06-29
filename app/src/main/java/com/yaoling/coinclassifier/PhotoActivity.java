@@ -26,8 +26,10 @@ import org.opencv.imgproc.Imgproc;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class PhotoActivity extends AppCompatActivity {
@@ -93,12 +95,20 @@ public class PhotoActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_TAKE_PHOTO && resultCode == RESULT_OK) {
-            Bitmap bitmap = setPhoto();
-            bitmap = imagePreprocessor.preprocessBitmap(bitmap);
-            final Collection<Recognition> results = classifier.doRecognize(bitmap);
-            textView.setText(results.toString());
+            setPhoto();
 
+            String resultText = "";
+            String inPath = getInnerSDCardPath();
+            File directory = new File(inPath + "/ROI");
+            File[] files = directory.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                Bitmap bitmap = BitmapFactory.decodeFile(files[i].getPath());
+                bitmap = imagePreprocessor.preprocessBitmap(bitmap);
+                List<Recognition> results = classifier.doRecognize(bitmap);
+                resultText += (", " + results.get(0).toString());
+            }
 
+            textView.setText(resultText);
         }
     }
 
@@ -158,6 +168,10 @@ public class PhotoActivity extends AppCompatActivity {
         imageView.setImageBitmap(processedImage);
 
         return processedImage;
+    }
+
+    public String getInnerSDCardPath() {
+        return Environment.getExternalStorageDirectory().getPath();
     }
 }
 

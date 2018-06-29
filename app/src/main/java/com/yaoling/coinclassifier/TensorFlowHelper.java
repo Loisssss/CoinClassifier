@@ -79,7 +79,7 @@ public class TensorFlowHelper {
      * Find the best classifications.
       */
 
-    public static Collection<Recognition> getBestResults(float[][] labelProbArray,
+    public static List<Recognition> getBestResults(float[][] labelProbArray,
                                                          List<String> labelList) {
         ArrayList<Recognition> recognitions = new ArrayList<>();
         for (int i = 0; i < labelList.size(); i++) {
