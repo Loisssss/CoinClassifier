@@ -96,8 +96,6 @@ public class CircleActivity {
         Log.i(TAG, "Ellipse count " + rects.size());
 
         List<Rect> ROIs = new ArrayList<>();
-        List<Rect> newROIs = new ArrayList<>();
-        List<Rect> copyROIs = new ArrayList<>();
 
         for (RotatedRect rect: rects) {
             Point[] pts = new Point[4];
@@ -112,7 +110,6 @@ public class CircleActivity {
             Rect area=new Rect(startx, starty, width , height);
 //            Mat ROI = new Mat(input, area);
             ROIs.add(area);
-            newROIs.add(area);
         }
 
 //        List<Rect> rectsToRemove = new ArrayList<Rect>();
@@ -155,22 +152,29 @@ public class CircleActivity {
 //        }
 
 
-        Iterator<Rect> ROIiterator = ROIs.iterator();
-        while (ROIiterator.hasNext()) {
-            Rect rectFilt = ROIiterator.next();
-            for (int i = 0; i < ROIs.size(); i++) {
-                if (Math.abs(ROIs.get(i).x - rectFilt.x) < 100 && Math.abs(ROIs.get(i).x - rectFilt.x) > 1 &&
-                        Math.abs(ROIs.get(i).y - rectFilt.y) < 100 && Math.abs(ROIs.get(i).y - rectFilt.y) > 1) {
-                    copyROIs.add(ROIs.get(i));
-                    ROIiterator.remove();
-                }
-            }
+//        Iterator<Rect> ROIiterator = ROIs.iterator();
+//        while (ROIiterator.hasNext()) {
+//            Rect rectFilt = ROIiterator.next();
+//            for (int i = 0; i < ROIs.size(); i++) {
+//                if (Math.abs(ROIs.get(i).x - rectFilt.x) < 100 && Math.abs(ROIs.get(i).x - rectFilt.x) > 1 &&
+//                        Math.abs(ROIs.get(i).y - rectFilt.y) < 100 && Math.abs(ROIs.get(i).y - rectFilt.y) > 1) {
+//                    ROIiterator.remove();
+//                }
+//            }
+//        }
+
+        List<Rect> newROIs = new ArrayList<>();
+        for (int i =0; i< ROIs.size(); i++) {
+            if (ifRectInRectList(ROIs.get(i),newROIs) == false) {
+                newROIs.add(ROIs.get(i));
+        }
+
         }
 
         String inPath = getInnerSDCardPath();
         delAllFile(inPath+"/ROI");
-        for (int k = 0; k <ROIs.size(); k++){
-            Imgcodecs.imwrite(inPath + "/ROI/" + k +".jpg",new Mat(input, ROIs.get(k)));
+        for (int k = 0; k <newROIs.size(); k++){
+            Imgcodecs.imwrite(inPath + "/ROI/" + k +".jpg",new Mat(input, newROIs.get(k)));
         }
     }
 
@@ -247,6 +251,26 @@ public class CircleActivity {
             }
         }
         return flag;
+    }
+
+
+    private boolean ifRectSimilar(Rect left, Rect right){
+
+        if (Math.abs(left.x - right.x) < 100 && Math.abs(left.x - right.x) > 1 &&
+                Math.abs(left.y - right.y) < 100 && Math.abs(left.y - right.y) > 1) {
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    private boolean ifRectInRectList(Rect rect, List<Rect> rectList){
+        for (int i =0; i < rectList.size(); i++){
+            if (ifRectSimilar(rect,rectList.get(i)) == true){
+                return true;
+            }
+        }
+        return false;
     }
 
 }

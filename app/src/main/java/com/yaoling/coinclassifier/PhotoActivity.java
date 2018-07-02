@@ -29,8 +29,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class PhotoActivity extends AppCompatActivity {
 
@@ -105,10 +107,22 @@ public class PhotoActivity extends AppCompatActivity {
                 Bitmap bitmap = BitmapFactory.decodeFile(files[i].getPath());
                 bitmap = imagePreprocessor.preprocessBitmap(bitmap);
                 List<Recognition> results = classifier.doRecognize(bitmap);
-                resultText += (", " + results.get(0).toString());
-            }
+                Map<Object,Object> map = new HashMap<Object,Object>();
 
-            textView.setText(resultText);
+                resultText += (results.get(0).toString()+",");
+            }
+            String[] array = resultText.split(",");
+            Map<Object,Object> map = new HashMap<Object, Object>();
+            for (int i = 0; i < array.length; i++) {
+                if(map.containsKey(array[i])) {
+                    Integer count = (Integer) map.get(array[i]);
+                    count++;
+                    map.put(array[i], count);
+            } else {
+                    map.put(array[i],1);
+                }
+            }
+            textView.setText(map.toString().substring(1, map.toString().length() - 1));
         }
     }
 

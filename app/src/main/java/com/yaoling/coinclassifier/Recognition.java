@@ -20,6 +20,7 @@ public class Recognition {
      */
     private final Float confidence;
 
+
     public Recognition(
             final String id, final String title, final Float confidence) {
         this.id = id;
@@ -43,7 +44,7 @@ public class Recognition {
     public String toString() {
         String resultString = "";
         if (id != null) {
-            resultString += "[" + id + "] ";
+//            resultString += "[" + id + "] ";
         }
 
         if (title != null) {
@@ -51,7 +52,7 @@ public class Recognition {
         }
 
         if (confidence != null) {
-            resultString += String.format("(%.1f%%) ", confidence * 100.0f);
+//            resultString += String.format("(%.1f%%) ", confidence * 100.0f);
         }
 
         return resultString.trim();
